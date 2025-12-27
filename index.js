@@ -4,7 +4,8 @@ const app = express();
 require("dotenv").config();
 const port = process.env.PORT || 3000;
 const { MongoClient, ServerApiVersion } = require("mongodb");
-const uri = "mongodb+srv://Admin:admindbpassword@share-circle.chele9h.mongodb.net/?appName=Share-circle";
+const uri =
+  "mongodb+srv://Admin:admindbpassword@share-circle.chele9h.mongodb.net/?appName=Share-circle";
 
 app.use(cors());
 app.use(express.json());
@@ -28,9 +29,24 @@ async function run() {
     const usersCollection = DB.collection("users");
 
     app.post("/user", async (req, res) => {
-      const data = req.body;
-      const result = await usersCollection.insertOne(data);
-      res.send(result);
+      try {
+        const user = req.body;
+
+        const result = await usersCollection.updateOne(
+          { email: user.email },
+          { $setOnInsert: user },
+          { upsert: true }
+        );
+
+        res.send({
+          inserted: result.upsertedCount > 0,
+          message: result.upsertedCount
+            ? "User created"
+            : "User already exists",
+        });
+      } catch (err) {
+        res.status(500).send({ message: "Server error" });
+      }
     });
     await client.db("admin").command({ ping: 1 });
     console.log(
