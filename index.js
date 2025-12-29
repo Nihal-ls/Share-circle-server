@@ -27,6 +27,7 @@ async function run() {
     // Send a ping to confirm a successful connection
     const DB = client.db("Share-circle-server-DB");
     const usersCollection = DB.collection("users");
+    const donationsCollection = DB.collection("items-for-donation");
 
     app.post("/user", async (req, res) => {
       try {
@@ -46,6 +47,17 @@ async function run() {
         });
       } catch (err) {
         res.status(500).send({ message: "Server error" });
+      }
+    });
+    app.post("/donations", async (req, res) => {
+      try {
+        const donation = req.body;
+        donation.createdAt = new Date();
+
+        const result = await donationsCollection.insertOne(donation);
+        res.send(result);
+      } catch (error) {
+        res.status(500).send({ message: "Failed to add donation" });
       }
     });
     await client.db("admin").command({ ping: 1 });
