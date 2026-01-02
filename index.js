@@ -3,7 +3,7 @@ const cors = require("cors");
 const app = express();
 require("dotenv").config();
 const port = process.env.PORT || 3000;
-const { MongoClient, ServerApiVersion } = require("mongodb");
+const { MongoClient, ServerApiVersion, ObjectId } = require("mongodb");
 const uri =
   "mongodb+srv://Admin:admindbpassword@share-circle.chele9h.mongodb.net/?appName=Share-circle";
 
@@ -61,11 +61,43 @@ async function run() {
       }
     });
 
+    // getting items which are for donation
     app.get('/items', async (req, res) => {
       const result = await donationsCollection.find().toArray()
       res.send(result)
     })
+    // donation items details
+    app.get('/items/:id', async (req, res) => {
+      try {
+        const id = req.params.id;
 
+        const query = { _id: new ObjectId(id) };
+        const result = await donationsCollection.findOne(query);
+
+        if (!result) {
+          return res.status(404).send({ message: 'Item not found' });
+        }
+
+        res.send(result);
+      } catch (error) {
+        res.status(400).send({ message: 'Invalid ID' });
+      }
+    });
+
+
+
+    // user role
+    app.get('/users/role/:email', async (req, res) => {
+      const email = req.params.email
+      const result = await usersCollection.findOne({ email })
+      res.send({ role: result?.role })
+    })
+
+    // getting users for admin
+    app.get('/users', async (req, res) => {
+      const result = await usersCollection.find().toArray()
+      res.send(result)
+    })
 
     await client.db("admin").command({ ping: 1 });
     console.log(
